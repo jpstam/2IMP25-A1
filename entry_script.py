@@ -1,6 +1,7 @@
 import csv
 import sys
 import os
+import time
 
 
 def write_output_file():
@@ -22,7 +23,25 @@ def write_output_file():
         writer.writerow(fieldnames)
 
         writer.writerow(["UC1", "L1, L34, L5"]) 
-        writer.writerow(["UC2", "L5, L4"]) 
+        writer.writerow(["UC2", "L5, L4"])
+
+def read_input_file(ifile):
+    '''
+    Parses an input file to a list of requirements that are lists of words.
+    :param ifile: The csv file to read
+    :return: The list of requirements
+    '''
+
+    print("hoi")
+    with open(ifile) as csvfile:
+        csv_reader = csv.reader(csvfile, delimiter=",")
+        reqs = {}
+        line_count = 0
+        for row in csv_reader:
+            if line_count > 0:
+                reqs[row[0]] = row[1].split(" ")
+            line_count += 1
+        return reqs
 
 
 if __name__ == "__main__":
@@ -44,14 +63,11 @@ if __name__ == "__main__":
     print(f"Hello world, running with matchtype {match_type}!")
 
     # Read input low-level requirements and count them (ignore header line).
-    with open("/input/low.csv", "r") as inputfile:
+    with open("/input/low.csv") as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
-
-    '''
-    This is where you should implement the trace level logic as discussed in the 
-    assignment on Canvas. Please ensure that you take care to deliver clean,
-    modular, and well-commented code.
-    '''
+    lowreqs = read_input_file("/input/low.csv")
+    print(lowreqs)
 
     write_output_file()
+    time.sleep(15)
