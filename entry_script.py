@@ -1,8 +1,6 @@
 import csv
 import sys
-
-
-
+import os
 
 
 def write_output_file():
@@ -10,7 +8,11 @@ def write_output_file():
     Writes a dummy output file using the python csv writer, update this 
     to accept as parameter the found trace links. 
     '''
-    with open('/output/links.csv', 'w') as csvfile:
+
+    if not os.path.exists('/output'):
+        os.makedirs('/output')
+
+    with open('/output/links.csv', 'w+') as csvfile:
 
         writer = csv.writer(csvfile, delimiter=",", quotechar="\"", quoting=csv.QUOTE_MINIMAL)
 
