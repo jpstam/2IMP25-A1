@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import re
+from nltk.stem import PorterStemmer
 
 
 def write_output_file():
@@ -65,6 +66,12 @@ def remove_stop_words(inreqs):
 
     return outreqs
 
+def stem_words(reqs):
+    porter = PorterStemmer()
+    stem_reqs= {}
+    for k, v in reqs.items():
+        stem_reqs[k] = [porter.stem(x) for x in v]
+    return stem_reqs
 
 if __name__ == "__main__":
     '''
@@ -92,7 +99,9 @@ if __name__ == "__main__":
     # print(lowreqs)
 
     lowrtrun = remove_stop_words(lowreqs)
-    print(lowrtrun)
+    # print(lowrtrun)
 
+    lowstems = stem_words(lowrtrun)
+    print(lowstems)
     write_output_file()
     time.sleep(15)
