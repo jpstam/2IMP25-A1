@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import re
+from nltk import word_tokenize
 from nltk.stem import PorterStemmer
 
 
@@ -57,21 +58,54 @@ def get_stopwords():
     stopfile.close()
     return stopwords
 
+def tokenize(reqs):
+    outreqs = {}
+    for k, v in reqs.items():
+        print(v)
+        outreqs[k] = word_tokenize(v)
+    return outreqs
+
 def remove_stop_words(inreqs):
     stopwords = get_stopwords()
     outreqs = {}
-
     for k, v in inreqs.items():
-        outreqs[k] = [x for x in v if x not in stopwords]
-
+        app = []
+        for x in v:
+            if x not in stopwords:
+                app.append(x)
+        outreqs[k] = app
     return outreqs
 
 def stem_words(reqs):
     porter = PorterStemmer()
     stem_reqs= {}
     for k, v in reqs.items():
-        stem_reqs[k] = [porter.stem(x) for x in v]
+        app = []
+        for x in v:
+            app.append(porter.stem(x))
+        stem_reqs[k] = app
     return stem_reqs
+
+def preproc(reqs):
+    #reqtok = tokenize(reqs)
+    reqrsw = remove_stop_words(reqs)
+    reqstem = stem_words(reqrsw)
+    return reqstem
+
+def create_master_vocab(high, low):
+    #using set instead of list to remove duplicates in master_vocab
+    vocab = set()
+    for k, v in high.items():
+        for x in v:
+            vocab.add(x)
+    for k, v in low.items():
+        for x in v:
+            vocab.add(x)
+    return vocab
+
+def create_vector_rep(voc, reqs):
+
+#return a vector as described
 
 if __name__ == "__main__":
     '''
@@ -95,13 +129,14 @@ if __name__ == "__main__":
     with open("/input/low.csv", 'r') as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
+
     lowreqs = read_input_file("/input/low.csv")
-    # print(lowreqs)
+    highreqs = read_input_file("/input/high.csv")
+    prohigh = preproc(highreqs)
+    prolow = preproc(lowreqs)
 
-    lowrtrun = remove_stop_words(lowreqs)
-    # print(lowrtrun)
+    masterVocab = create_master_vocab(prohigh, prolow)
+    highvec = create_vector_rep(masterVocab, prohigh)
 
-    lowstems = stem_words(lowrtrun)
-    print(lowstems)
     write_output_file()
     time.sleep(15)
