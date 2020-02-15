@@ -18,16 +18,15 @@ def write_output_file():
         os.makedirs('/output')
 
     with open('/output/links.csv', 'w+') as csvfile:
-
         writer = csv.writer(csvfile, delimiter=",", quotechar="\"", quoting=csv.QUOTE_MINIMAL)
-
 
         fieldnames = ["id", "links"]
 
         writer.writerow(fieldnames)
 
-        writer.writerow(["UC1", "L1, L34, L5"]) 
+        writer.writerow(["UC1", "L1, L34, L5"])
         writer.writerow(["UC2", "L5, L4"])
+
 
 def read_input_file(ifile):
     '''
@@ -36,7 +35,6 @@ def read_input_file(ifile):
     :return: The list of requirements
     '''
 
-    print("hoi")
     with open(ifile) as csvfile:
         csv_reader = csv.reader(csvfile, delimiter=",")
         reqs = {}
@@ -44,9 +42,11 @@ def read_input_file(ifile):
         spacesre = re.compile(r'^\s*$')
         for row in csv_reader:
             if line_count > 0:
-                reqs[row[0]] = [i for i in row[1].lower().replace(".", "").replace(",", "").split(" ") if not spacesre.match(i)]
+                reqs[row[0]] = [i for i in row[1].lower().replace(".", "").replace(",", "").split(" ") if
+                                not spacesre.match(i)]
             line_count += 1
         return reqs
+
 
 def get_stopwords():
     try:
@@ -59,12 +59,13 @@ def get_stopwords():
     stopfile.close()
     return stopwords
 
+
 def tokenize(reqs):
     outreqs = {}
     for k, v in reqs.items():
-
         outreqs[k] = word_tokenize(v)
     return outreqs
+
 
 def remove_stop_words(inreqs):
     stopwords = get_stopwords()
@@ -77,9 +78,10 @@ def remove_stop_words(inreqs):
         outreqs[k] = app
     return outreqs
 
+
 def stem_words(reqs):
     porter = PorterStemmer()
-    stem_reqs= {}
+    stem_reqs = {}
     for k, v in reqs.items():
         app = []
         for x in v:
@@ -87,14 +89,16 @@ def stem_words(reqs):
         stem_reqs[k] = app
     return stem_reqs
 
+
 def preproc(reqs):
-    #reqtok = tokenize(reqs)
+    # reqtok = tokenize(reqs)
     reqrsw = remove_stop_words(reqs)
     reqstem = stem_words(reqrsw)
     return reqstem
 
+
 def create_master_vocab(high, low):
-    #using set instead of list to remove duplicates in master_vocab
+    # using set instead of list to remove duplicates in master_vocab
     vocab = set()
     for k, v in high.items():
         for x in v:
@@ -104,16 +108,18 @@ def create_master_vocab(high, low):
             vocab.add(x)
     return vocab
 
+
 def create_vector_rep(voc, reqs):
     vector_rep = {}
     vector_temp = {}
     req_counter = 0
     for k, v in reqs.items():
-        vector_temp = create_vector(voc , v)
+        vector_temp = create_vector(voc, v)
         vector_rep[k] = vector_temp
         req_counter += 1
     vector_result = add_idf(req_counter, vector_rep)
     return vector_result
+
 
 def create_vector(voc, req):
     vector = []
@@ -122,43 +128,48 @@ def create_vector(voc, req):
         counter = 0
         for z in req:
             if z == k:
-               counter += 1
+                counter += 1
         vector.append(counter)
         x += 1
     return vector
 
-def add_idf (n, vectors):
-    d = 0 
-    for k , v in vectors.items(): 
+
+def add_idf(n, vectors):
+    d = 0
+    for k, v in vectors.items():
         counter = 0
-        for p in v:       
-            if p > 0: 
-               d = 0
-               for x , y in vectors.items():
-                   if y[counter] > 0:
-                      d += 1
-               vectors[str(k)][int(p)] = calc_idf(n,d)
+        for p in v:
+            if p > 0:
+                d = 0
+                for x, y in vectors.items():
+                    if y[counter] > 0:
+                        d += 1
+                vectors[str(k)][int(p)] = calc_idf(n, d)
             counter += 1
     return vectors
-  
-def calc_idf(n , d):
+
+
+def calc_idf(n, d):
     number = n / d
     return math.log2(number)
 
-def create_simmatrix(high,low):
+
+def create_simmatrix(high, low):
     resultmatrix = {}
-    for k , v in high.items():
+    for k, v in high.items():
         tempvector = {}
         for x, y in low.items():
-            tempvector[x] = calculate_cos(v,y)
+            tempvector[x] = calculate_cos(v, y)
         resultmatrix[k] = tempvector
     return resultmatrix
+
+
 def calculate_cos(highvec, lowvec):
     top = 0
     count = 0
     for v in highvec:
         top = top + (highvec[count] * lowvec[count])
-    count += 1
+        count += 1
     bottoml = 0
     bottomr = 0
     for v in highvec:
@@ -168,40 +179,38 @@ def calculate_cos(highvec, lowvec):
     bottom = bottoml * bottomr
     return top / bottom
 
+
 def tracelink(matrix, var):
     result = {}
     temp = {}
-    if var == 1 :
-       for k in matrix.items():
-           counter = 0
-           for v in k:
-              if k[v] > 0:  #doesnt work, v cannot be a string
-                 temp[counter] = v
-                 counter += 1
-           result[k] = temp
-    if var == 2 :
-       for k in matrix.items():
-           counter = 0
-           for v in k:
-               if matrix[k][v] >= 0.25:
-                  temp[counter] = v
-                  counter += 1
-           result[k] = temp
-    if var == 3 :
-       for k in matrix.items():
-           top = 0
-           for v in k:
-              if matrix[k][v] >= 0.67 and matrix[k][v] > top:
-                 top = v
-           if top != 0:
-              result[k] = top
+    if var == 0:
+        for k, l in matrix.items():
+            counter = 0
+            for v, w in l.items():
+                if w > 0:
+                    temp[counter] = v
+                    counter += 1
+            result[k] = temp
+    if var == 1:
+        for k, l in matrix.items():
+            counter = 0
+            for v, w in l.items():
+                if w >= 0.25:
+                    temp[counter] = v
+                    counter += 1
+            result[k] = temp
+    if var == 2:
+        for k in matrix.items():
+            top = 0
+            for v in k:
+                if matrix[k][v] >= 0.67 and matrix[k][v] > top:
+                    top = v
+            if top != 0:
+                result[k] = top
     return result
 
 
-     
-
-
-#return a vector as described
+# return a vector as described
 
 if __name__ == "__main__":
     '''
@@ -217,7 +226,7 @@ if __name__ == "__main__":
         match_type = int(sys.argv[1])
     except ValueError as e:
         print("Match type provided is not a valid number")
-        exit(1)    
+        exit(1)
 
     print(f"Hello world, running with matchtype {match_type}!")
 
@@ -225,17 +234,16 @@ if __name__ == "__main__":
     with open("/input/low.csv", 'r') as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
-
     lowreqs = read_input_file("/input/low.csv")
     highreqs = read_input_file("/input/high.csv")
     prohigh = preproc(highreqs)
     prolow = preproc(lowreqs)
-    variation = 1
     masterVocab = create_master_vocab(prohigh, prolow)
     highvec = create_vector_rep(masterVocab, prohigh)
     lowvec = create_vector_rep(masterVocab, prolow)
-    simmatrix = create_simmatrix(highvec,lowvec)
-    result = tracelink(simmatrix, variation)
+    simmatrix = create_simmatrix(highvec, lowvec)
+    result = tracelink(simmatrix, match_type)
+    print(simmatrix)
+    print(result)
 
     write_output_file()
-    time.sleep(15)

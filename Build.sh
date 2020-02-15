@@ -1,0 +1,1 @@
+docker build -t 2imp25-assignment-1 ./

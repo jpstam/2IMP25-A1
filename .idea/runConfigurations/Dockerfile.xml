@@ -3,12 +3,24 @@
     <deployment type="dockerfile">
       <settings>
         <option name="buildCliOptions" value="" />
-        <option name="command" value="" />
+        <option name="command" value="1" />
         <option name="containerName" value="2IMP25_a1" />
         <option name="entrypoint" value="" />
         <option name="imageTag" value="" />
         <option name="commandLineOptions" value="" />
         <option name="sourceFilePath" value="Dockerfile" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/input" />
+              <option name="hostPath" value="/$PWD/dataset-1" />
+            </DockerVolumeBindingImpl>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/output" />
+              <option name="hostPath" value="/$PWD/output" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
       </settings>
     </deployment>
     <method v="2" />
