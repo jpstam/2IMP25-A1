@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import re
+import math
 from nltk import word_tokenize
 from nltk.stem import PorterStemmer
 
@@ -61,7 +62,7 @@ def get_stopwords():
 def tokenize(reqs):
     outreqs = {}
     for k, v in reqs.items():
-        print(v)
+
         outreqs[k] = word_tokenize(v)
     return outreqs
 
@@ -104,6 +105,101 @@ def create_master_vocab(high, low):
     return vocab
 
 def create_vector_rep(voc, reqs):
+    vector_rep = {}
+    vector_temp = {}
+    req_counter = 0
+    for k, v in reqs.items():
+        vector_temp = create_vector(voc , v)
+        vector_rep[k] = vector_temp
+        req_counter += 1
+    vector_result = add_idf(req_counter, vector_rep)
+    return vector_result
+
+def create_vector(voc, req):
+    vector = []
+    x = 0
+    for k in voc:
+        counter = 0
+        for z in req:
+            if z == k:
+               counter += 1
+        vector.append(counter)
+        x += 1
+    return vector
+
+def add_idf (n, vectors):
+    d = 0 
+    for k , v in vectors.items(): 
+        counter = 0
+        for p in v:       
+            if p > 0: 
+               d = 0
+               for x , y in vectors.items():
+                   if y[counter] > 0:
+                      d += 1
+               vectors[str(k)][int(p)] = calc_idf(n,d)
+            counter += 1
+    return vectors
+  
+def calc_idf(n , d):
+    number = n / d
+    return math.log2(number)
+
+def create_simmatrix(high,low):
+    resultmatrix = {}
+    for k , v in high.items():
+        tempvector = {}
+        for x, y in low.items():
+            tempvector[x] = calculate_cos(v,y)
+        resultmatrix[k] = tempvector
+    return resultmatrix
+def calculate_cos(highvec, lowvec):
+    top = 0
+    count = 0
+    for v in highvec:
+        top = top + (highvec[count] * lowvec[count])
+    count += 1
+    bottoml = 0
+    bottomr = 0
+    for v in highvec:
+        bottoml = bottoml + (v * v)
+    for v in lowvec:
+        bottomr = bottomr + (v * v)
+    bottom = bottoml * bottomr
+    return top / bottom
+
+def tracelink(matrix, var):
+    result = {}
+    temp = {}
+    if var == 1 :
+       for k in matrix.items():
+           counter = 0
+           for v in k:
+              if k[v] > 0:  #doesnt work, v cannot be a string
+                 temp[counter] = v
+                 counter += 1
+           result[k] = temp
+    if var == 2 :
+       for k in matrix.items():
+           counter = 0
+           for v in k:
+               if matrix[k][v] >= 0.25:
+                  temp[counter] = v
+                  counter += 1
+           result[k] = temp
+    if var == 3 :
+       for k in matrix.items():
+           top = 0
+           for v in k:
+              if matrix[k][v] >= 0.67 and matrix[k][v] > top:
+                 top = v
+           if top != 0:
+              result[k] = top
+    return result
+
+
+     
+
 
 #return a vector as described
 
@@ -134,9 +230,12 @@ if __name__ == "__main__":
     highreqs = read_input_file("/input/high.csv")
     prohigh = preproc(highreqs)
     prolow = preproc(lowreqs)
-
+    variation = 1
     masterVocab = create_master_vocab(prohigh, prolow)
     highvec = create_vector_rep(masterVocab, prohigh)
+    lowvec = create_vector_rep(masterVocab, prolow)
+    simmatrix = create_simmatrix(highvec,lowvec)
+    result = tracelink(simmatrix, variation)
 
     write_output_file()
     time.sleep(15)
