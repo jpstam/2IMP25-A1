@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Build and run" type="ShConfigurationType">
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/Run.sh" />
+    <option name="SCRIPT_OPTIONS" value="" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="INTERPRETER_PATH" value="/bin/bash" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <method v="2">
+      <option name="Sh.BeforeRunTask" RUN_CONFIG_NAME="Build" RUN_CONFIG_TYPE="ShConfigurationType" />
+    </method>
+  </configuration>
+</component>
