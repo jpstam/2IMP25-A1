@@ -5,10 +5,10 @@ import time
 import re
 import math
 from nltk import word_tokenize
-from nltk.stem import PorterStemmer
+from nltk.stem import PorterStemmer as Stemmer
 
 
-def write_output_file():
+def write_output_file(result):
     '''
     Writes a dummy output file using the python csv writer, update this 
     to accept as parameter the found trace links. 
@@ -23,9 +23,9 @@ def write_output_file():
         fieldnames = ["id", "links"]
 
         writer.writerow(fieldnames)
+        for k, v in result.items():
+            writer.writerow([k,v])
 
-        writer.writerow(["UC1", "L1, L34, L5"])
-        writer.writerow(["UC2", "L5, L4"])
 
 
 def read_input_file(ifile):
@@ -80,7 +80,7 @@ def remove_stop_words(inreqs):
 
 
 def stem_words(reqs):
-    porter = PorterStemmer()
+    porter = Stemmer()
     stem_reqs = {}
     for k, v in reqs.items():
         app = []
@@ -174,8 +174,10 @@ def calculate_cos(highvec, lowvec):
     bottomr = 0
     for v in highvec:
         bottoml = bottoml + (v * v)
+    bottoml = math.sqrt(bottoml)
     for v in lowvec:
         bottomr = bottomr + (v * v)
+    bottomr = math.sqrt(bottomr)
     bottom = bottoml * bottomr
     return top / bottom
 
@@ -200,14 +202,26 @@ def tracelink(matrix, var):
                     counter += 1
             result[k] = temp
     if var == 2:
-        for k in matrix.items():
+        for k, l in matrix.items():
             top = 0
-            for v in k:
-                if matrix[k][v] >= 0.67 and matrix[k][v] > top:
-                    top = v
-            if top != 0:
-                result[k] = top
+            toppair = "" 
+            print(toppair)
+            print(top)
+            for v, w in l.items():
+                if w >= 0.67 and w > top:
+                    top = w
+                    toppair = v
+            #if top != 0:
+            result[k] = toppair
+            #else:
+             #   result[k] ="" 
     return result
+
+#def evaluate ():
+    # output = open("/output/link.csv","r")
+    # validator = open("/asdasdasa ","r")  
+
+
 
 
 # return a vector as described
@@ -243,7 +257,7 @@ if __name__ == "__main__":
     lowvec = create_vector_rep(masterVocab, prolow)
     simmatrix = create_simmatrix(highvec, lowvec)
     result = tracelink(simmatrix, match_type)
-    print(simmatrix)
+    #print(simmatrix)
     print(result)
-
-    write_output_file()
+    write_output_file(result)
+    #evaluate()
