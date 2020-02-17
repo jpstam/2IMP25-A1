@@ -1,11 +1,17 @@
 import csv
 import sys
 import os
-import time
-import re
 import math
-from nltk import word_tokenize
+import nltk
+import numpy
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer as Stemmer
+
+
+def ntlk_prereq():
+    nltk.download('stopwords')
+    nltk.download('punkt')
 
 
 def write_output_file(result):
@@ -39,25 +45,12 @@ def read_input_file(ifile):
         csv_reader = csv.reader(csvfile, delimiter=",")
         reqs = {}
         line_count = 0
-        spacesre = re.compile(r'^\s*$')
         for row in csv_reader:
             if line_count > 0:
-                reqs[row[0]] = [i for i in row[1].lower().replace(".", "").replace(",", "").split(" ") if
-                                not spacesre.match(i)]
+                reqs[row[0]] = row[1]
             line_count += 1
         return reqs
 
-
-def get_stopwords():
-    try:
-        stopfile = open("stopwords.txt", 'r')
-    except IOError:
-        print("Error: File with stopwords does not exist.")
-        return 0
-
-    stopwords = stopfile.read().lower().splitlines()
-    stopfile.close()
-    return stopwords
 
 
 def tokenize(reqs):
@@ -68,14 +61,10 @@ def tokenize(reqs):
 
 
 def remove_stop_words(inreqs):
-    stopwords = get_stopwords()
+    stop_words = set(stopwords.words('english'))
     outreqs = {}
     for k, v in inreqs.items():
-        app = []
-        for x in v:
-            if x not in stopwords:
-                app.append(x)
-        outreqs[k] = app
+        outreqs[k] = [w for w in v if not w in stop_words]
     return outreqs
 
 
@@ -91,8 +80,8 @@ def stem_words(reqs):
 
 
 def preproc(reqs):
-    # reqtok = tokenize(reqs)
-    reqrsw = remove_stop_words(reqs)
+    reqtok = tokenize(reqs)
+    reqrsw = remove_stop_words(reqtok)
     reqstem = stem_words(reqrsw)
     return reqstem
 
@@ -111,47 +100,20 @@ def create_master_vocab(high, low):
 
 def create_vector_rep(voc, reqs):
     vector_rep = {}
-    vector_temp = {}
-    req_counter = 0
+    # initialize d (in how many requirements each word occurs) to all 0's
+    d = numpy.array([0 for i in voc])
     for k, v in reqs.items():
-        vector_temp = create_vector(voc, v)
-        vector_rep[k] = vector_temp
-        req_counter += 1
-    vector_result = add_idf(req_counter, vector_rep)
+        vector_rep[k] = [v.count(k) for k in voc]
+        # add 1 if word occurs.
+        d += numpy.array([1 if t > 0 else 0 for t in vector_rep[k]])
+    # long comprehension, but explanation:
+    # create new dict with same keys as vector_rep
+    # value is an list, based on list from vector_rep
+    # if the value is > 0 then:
+    # log(n/d) n = number of requirement by len, d is constructed above and index is obtained by enumerate construct
+    # else value 0
+    vector_result = {k:[math.log2(len(reqs)/d[i]) if int(val) > 0 else 0 for i, val in enumerate(v)] for k, v in vector_rep.items()}
     return vector_result
-
-
-def create_vector(voc, req):
-    vector = []
-    x = 0
-    for k in voc:
-        counter = 0
-        for z in req:
-            if z == k:
-                counter += 1
-        vector.append(counter)
-        x += 1
-    return vector
-
-
-def add_idf(n, vectors):
-    d = 0
-    for k, v in vectors.items():
-        counter = 0
-        for p in v:
-            if p > 0:
-                d = 0
-                for x, y in vectors.items():
-                    if y[counter] > 0:
-                        d += 1
-                vectors[str(k)][int(p)] = calc_idf(n, d)
-            counter += 1
-    return vectors
-
-
-def calc_idf(n, d):
-    number = n / d
-    return math.log2(number)
 
 
 def create_simmatrix(high, low):
@@ -205,8 +167,8 @@ def tracelink(matrix, var):
         for k, l in matrix.items():
             top = 0
             toppair = "" 
-            print(toppair)
-            print(top)
+            # print(toppair)
+            # print(top)
             for v, w in l.items():
                 if w >= 0.67 and w > top:
                     top = w
@@ -248,6 +210,8 @@ if __name__ == "__main__":
     with open("/input/low.csv", 'r') as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
+    ntlk_prereq()
+
     lowreqs = read_input_file("/input/low.csv")
     highreqs = read_input_file("/input/high.csv")
     prohigh = preproc(highreqs)
@@ -257,7 +221,5 @@ if __name__ == "__main__":
     lowvec = create_vector_rep(masterVocab, prolow)
     simmatrix = create_simmatrix(highvec, lowvec)
     result = tracelink(simmatrix, match_type)
-    #print(simmatrix)
-    print(result)
     write_output_file(result)
     #evaluate()
