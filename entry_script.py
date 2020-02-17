@@ -4,12 +4,14 @@ import os
 import math
 import nltk
 import numpy
+import pprint
+from scipy import spatial
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer as Stemmer
 
 
-def ntlk_prereq():
+def nltk_prereq():
     nltk.download('stopwords')
     nltk.download('punkt')
 
@@ -24,14 +26,13 @@ def write_output_file(result):
         os.makedirs('/output')
 
     with open('/output/links.csv', 'w+') as csvfile:
-        writer = csv.writer(csvfile, delimiter=",", quotechar="\"", quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(csvfile, delimiter=",", quotechar="\"", quoting=csv.QUOTE_ALL)
 
         fieldnames = ["id", "links"]
 
         writer.writerow(fieldnames)
         for k, v in result.items():
-            writer.writerow([k,v])
-
+            writer.writerow([k, ','.join(v)])
 
 
 def read_input_file(ifile):
@@ -50,7 +51,6 @@ def read_input_file(ifile):
                 reqs[row[0]] = row[1]
             line_count += 1
         return reqs
-
 
 
 def tokenize(reqs):
@@ -112,78 +112,38 @@ def create_vector_rep(voc, reqs):
     # if the value is > 0 then:
     # log(n/d) n = number of requirement by len, d is constructed above and index is obtained by enumerate construct
     # else value 0
-    vector_result = {k:[math.log2(len(reqs)/d[i]) if int(val) > 0 else 0 for i, val in enumerate(v)] for k, v in vector_rep.items()}
+    vector_result = {k: [math.log2(len(reqs) / d[i]) if int(val) > 0 else 0 for i, val in enumerate(v)] for k, v in
+                     vector_rep.items()}
     return vector_result
 
 
 def create_simmatrix(high, low):
-    resultmatrix = {}
-    for k, v in high.items():
-        tempvector = {}
-        for x, y in low.items():
-            tempvector[x] = calculate_cos(v, y)
-        resultmatrix[k] = tempvector
-    return resultmatrix
-
-
-def calculate_cos(highvec, lowvec):
-    top = 0
-    count = 0
-    for v in highvec:
-        top = top + (highvec[count] * lowvec[count])
-        count += 1
-    bottoml = 0
-    bottomr = 0
-    for v in highvec:
-        bottoml = bottoml + (v * v)
-    bottoml = math.sqrt(bottoml)
-    for v in lowvec:
-        bottomr = bottomr + (v * v)
-    bottomr = math.sqrt(bottomr)
-    bottom = bottoml * bottomr
-    return top / bottom
+    # return two dimensional dict.
+    # for each high level req:
+    # calculate cos similarity for each low level req.
+    return {k: {
+        x: (1 - spatial.distance.cosine(v, y)) for x, y in low.items()
+    } for k, v in high.items()}
 
 
 def tracelink(matrix, var):
-    result = {}
-    temp = {}
     if var == 0:
-        for k, l in matrix.items():
-            counter = 0
-            for v, w in l.items():
-                if w > 0:
-                    temp[counter] = v
-                    counter += 1
-            result[k] = temp
+        return {k: [
+            x for x, y in v.items() if y > 0
+        ] for k, v in matrix.items()}
     if var == 1:
-        for k, l in matrix.items():
-            counter = 0
-            for v, w in l.items():
-                if w >= 0.25:
-                    temp[counter] = v
-                    counter += 1
-            result[k] = temp
+        return {k: [
+            x for x, y in v.items() if y >= 0.25
+        ] for k, v in matrix.items()}
     if var == 2:
-        for k, l in matrix.items():
-            top = 0
-            toppair = "" 
-            # print(toppair)
-            # print(top)
-            for v, w in l.items():
-                if w >= 0.67 and w > top:
-                    top = w
-                    toppair = v
-            #if top != 0:
-            result[k] = toppair
-            #else:
-             #   result[k] ="" 
-    return result
-
-#def evaluate ():
-    # output = open("/output/link.csv","r")
-    # validator = open("/asdasdasa ","r")  
+        return {k: [
+            x for x, y in v.items() if y >= 0.67 * max(v.values())
+        ] for k, v in matrix.items()}
 
 
+# def evaluate ():
+# output = open("/output/link.csv","r")
+# validator = open("/asdasdasa ","r")
 
 
 # return a vector as described
@@ -210,7 +170,9 @@ if __name__ == "__main__":
     with open("/input/low.csv", 'r') as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
-    ntlk_prereq()
+    nltk_prereq()
+
+    pp = pprint.PrettyPrinter(width=41, compact=True)
 
     lowreqs = read_input_file("/input/low.csv")
     highreqs = read_input_file("/input/high.csv")
@@ -221,5 +183,6 @@ if __name__ == "__main__":
     lowvec = create_vector_rep(masterVocab, prolow)
     simmatrix = create_simmatrix(highvec, lowvec)
     result = tracelink(simmatrix, match_type)
+    # pp.pprint(result)
     write_output_file(result)
-    #evaluate()
+    # evaluate()
