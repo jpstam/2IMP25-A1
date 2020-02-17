@@ -54,29 +54,19 @@ def read_input_file(ifile):
 
 
 def tokenize(reqs):
-    outreqs = {}
-    for k, v in reqs.items():
-        outreqs[k] = word_tokenize(v)
-    return outreqs
+    return {k:word_tokenize(v) for k, v in reqs.items()}
 
 
 def remove_stop_words(inreqs):
     stop_words = set(stopwords.words('english'))
-    outreqs = {}
-    for k, v in inreqs.items():
-        outreqs[k] = [w for w in v if not w in stop_words]
-    return outreqs
+    return {k:[w for w in v if not w in stop_words] for k, v in inreqs.items()}
 
 
 def stem_words(reqs):
     porter = Stemmer()
-    stem_reqs = {}
-    for k, v in reqs.items():
-        app = []
-        for x in v:
-            app.append(porter.stem(x))
-        stem_reqs[k] = app
-    return stem_reqs
+    return {k:[
+        porter.stem(x) for x in v
+    ] for k, v in reqs.items()}
 
 
 def preproc(reqs):
