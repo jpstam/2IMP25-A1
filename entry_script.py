@@ -131,10 +131,43 @@ def tracelink(matrix, var):
         ] for k, v in matrix.items()}
 
 
-# def evaluate ():
-# output = open("/output/link.csv","r")
-# validator = open("/asdasdasa ","r")
-
+def evaluate (res, valid):
+    manualtool = 0
+    notmanualtool = 0
+    manualnottool = 0
+    notmanualnottool = 0
+    valid = tokenize(valid)
+    for k, v in res.items():
+        for x in v:
+            occurs = 0
+            for a in valid[k]:
+                print(x)
+                print(a)
+                if a == x and a != ",":
+                   occurs = 1
+            if occurs == 1:
+               manualtool += 1
+            else:
+               notmanualtool += 1
+    for k, v in valid.items():
+        for x in v:
+            occurs = 0
+            for a in res[k]:
+                if a == x:
+                   occurs = 1
+            if x == "," :
+               occurs = 1
+            if occurs == 0:
+               manualnottool += 1
+    lengthlow = len(read_input_file("/input/low.csv"))
+    lengthhigh = len(read_input_file("/input/high.csv"))
+    notmanualnottool = (lengthlow * lengthhigh) - manualtool- notmanualtool - manualnottool
+    print("number of predicted which are identified " + str(manualtool))
+    print("number of predicted which are not identified " + str(notmanualtool))
+    print("number of not predicted which are identified " + str(manualnottool))
+    print("number of not predicted which are not identified " + str(notmanualnottool))
+    
+     
 
 # return a vector as described
 
@@ -166,6 +199,7 @@ if __name__ == "__main__":
 
     lowreqs = read_input_file("/input/low.csv")
     highreqs = read_input_file("/input/high.csv")
+    validation = read_input_file("/input/links.csv")
     prohigh = preproc(highreqs)
     prolow = preproc(lowreqs)
     masterVocab = create_master_vocab(prohigh, prolow)
@@ -175,4 +209,4 @@ if __name__ == "__main__":
     result = tracelink(simmatrix, match_type)
     # pp.pprint(result)
     write_output_file(result)
-    # evaluate()
+    evaluate(result,validation)
