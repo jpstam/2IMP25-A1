@@ -136,38 +136,35 @@ def evaluate (res, valid):
     notmanualtool = 0
     manualnottool = 0
     notmanualnottool = 0
-    valid = tokenize(valid)
+    # valid = tokenize(valid)
     for k, v in res.items():
         for x in v:
-            occurs = 0
-            for a in valid[k]:
-                print(x)
-                print(a)
-                if a == x and a != ",":
-                   occurs = 1
-            if occurs == 1:
+            if x in valid[k].split(","):
                manualtool += 1
             else:
                notmanualtool += 1
     for k, v in valid.items():
-        for x in v:
-            occurs = 0
-            for a in res[k]:
-                if a == x:
-                   occurs = 1
-            if x == "," :
-               occurs = 1
-            if occurs == 0:
-               manualnottool += 1
+        for x in v.split(","):
+            # if x.strip for empty sets in valid
+            if x.strip() and x not in res[k]:
+                manualnottool += 1
     lengthlow = len(read_input_file("/input/low.csv"))
     lengthhigh = len(read_input_file("/input/high.csv"))
     notmanualnottool = (lengthlow * lengthhigh) - manualtool- notmanualtool - manualnottool
+
+    recall = manualtool / (manualtool + manualnottool)
+    precision = manualtool / (manualtool + notmanualtool)
+    fmeasure = 2 * precision * recall / (precision + recall)
+
     print("number of predicted which are identified " + str(manualtool))
     print("number of predicted which are not identified " + str(notmanualtool))
     print("number of not predicted which are identified " + str(manualnottool))
     print("number of not predicted which are not identified " + str(notmanualnottool))
-    
-     
+    print("\n")
+    print(f'Precision: {precision}')
+    print(f'Recall: {recall}')
+    print(f'F-measure: {fmeasure}')
+
 
 # return a vector as described
 
