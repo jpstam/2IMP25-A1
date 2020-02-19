@@ -54,17 +54,17 @@ def read_input_file(ifile):
 
 
 def tokenize(reqs):
-    return {k:word_tokenize(v) for k, v in reqs.items()}
+    return {k: word_tokenize(v) for k, v in reqs.items()}
 
 
 def remove_stop_words(inreqs):
     stop_words = set(stopwords.words('english'))
-    return {k:[w for w in v if not w in stop_words] for k, v in inreqs.items()}
+    return {k: [w for w in v if not w in stop_words] for k, v in inreqs.items()}
 
 
 def stem_words(reqs):
     porter = Stemmer()
-    return {k:[
+    return {k: [
         porter.stem(x) for x in v
     ] for k, v in reqs.items()}
 
@@ -102,8 +102,9 @@ def create_vector_rep(voc, reqs):
     # if the value is > 0 then:
     # log(n/d) n = number of requirement by len, d is constructed above and index is obtained by enumerate construct
     # else value 0
-    vector_result = {k: [math.log2(len(reqs) / d[i]) if int(val) > 0 else 0 for i, val in enumerate(v)] for k, v in
-                     vector_rep.items()}
+    vector_result = {k: [
+        val * math.log2(len(reqs) / d[i]) if int(val) > 0 else 0 for i, val in enumerate(v)
+    ] for k, v in vector_rep.items()}
     return vector_result
 
 
@@ -131,7 +132,7 @@ def tracelink(matrix, var):
         ] for k, v in matrix.items()}
 
 
-def evaluate (res, valid):
+def evaluate(res, valid):
     manualtool = 0
     notmanualtool = 0
     manualnottool = 0
@@ -140,9 +141,9 @@ def evaluate (res, valid):
     for k, v in res.items():
         for x in v:
             if x in valid[k].split(","):
-               manualtool += 1
+                manualtool += 1
             else:
-               notmanualtool += 1
+                notmanualtool += 1
     for k, v in valid.items():
         for x in v.split(","):
             # if x.strip for empty sets in valid
@@ -150,7 +151,7 @@ def evaluate (res, valid):
                 manualnottool += 1
     lengthlow = len(read_input_file("/input/low.csv"))
     lengthhigh = len(read_input_file("/input/high.csv"))
-    notmanualnottool = (lengthlow * lengthhigh) - manualtool- notmanualtool - manualnottool
+    notmanualnottool = (lengthlow * lengthhigh) - manualtool - notmanualtool - manualnottool
 
     recall = manualtool / (manualtool + manualnottool)
     precision = manualtool / (manualtool + notmanualtool)
@@ -206,4 +207,4 @@ if __name__ == "__main__":
     result = tracelink(simmatrix, match_type)
     # pp.pprint(result)
     write_output_file(result)
-    evaluate(result,validation)
+    evaluate(result, validation)
