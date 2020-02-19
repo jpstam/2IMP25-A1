@@ -160,8 +160,8 @@ def evaluate(res, valid):
     fmeasure = 2 * precision * recall / (precision + recall)
 
     print("number of predicted which are identified " + str(manualtool))
-    print("number of predicted which are not identified " + str(notmanualtool))
-    print("number of not predicted which are identified " + str(manualnottool))
+    print("number of predicted which are not identified " + str(manualnottool))
+    print("number of not predicted which are identified " + str(notmanualtool))
     print("number of not predicted which are not identified " + str(notmanualnottool))
     print("\n")
     print(f'Precision: {precision}')
