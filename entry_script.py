@@ -144,11 +144,13 @@ def evaluate(res, valid):
                 manualtool += 1
             else:
                 notmanualtool += 1
+                print(f'Misclassification: {x} linked with {k}')
     for k, v in valid.items():
         for x in v.split(","):
             # if x.strip for empty sets in valid
             if x.strip() and x not in res[k]:
                 manualnottool += 1
+                print(f'Link not found: {x} not linked with {k}')
     lengthlow = len(read_input_file("/input/low.csv"))
     lengthhigh = len(read_input_file("/input/high.csv"))
     notmanualnottool = (lengthlow * lengthhigh) - manualtool - notmanualtool - manualnottool
