@@ -5,6 +5,7 @@ import math
 import nltk
 import numpy
 import pprint
+import statistics as stat
 from scipy import spatial
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -130,6 +131,10 @@ def tracelink(matrix, var):
         return {k: [
             x for x, y in v.items() if y >= 0.67 * max(v.values())
         ] for k, v in matrix.items()}
+    if var == 3:
+        return {k: [
+            x for x, y in v.items() if y >= 1.1 * stat.mean(v.values()) + 0.2 * max(v.values()) + 1.9 * stat.stdev(v.values())
+        ] for k, v in matrix.items()}
 
 
 def evaluate(res, valid):
@@ -137,7 +142,6 @@ def evaluate(res, valid):
     notmanualtool = 0
     manualnottool = 0
     notmanualnottool = 0
-    # valid = tokenize(valid)
     for k, v in res.items():
         for x in v:
             if x in [ks.strip() for ks in valid[k].split(",")]:
