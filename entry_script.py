@@ -140,7 +140,7 @@ def evaluate(res, valid):
     # valid = tokenize(valid)
     for k, v in res.items():
         for x in v:
-            if x in valid[k].split(","):
+            if x in [ks.strip() for ks in valid[k].split(",")]:
                 manualtool += 1
             else:
                 notmanualtool += 1
@@ -148,9 +148,9 @@ def evaluate(res, valid):
     for k, v in valid.items():
         for x in v.split(","):
             # if x.strip for empty sets in valid
-            if x.strip() and x not in res[k]:
+            if x.strip() and x.strip() not in res[k]:
                 manualnottool += 1
-                print(f'Link not found: {x} not linked with {k}')
+                print(f'Link not found: {x.strip()} not linked with {k}')
     lengthlow = len(read_input_file("/input/low.csv"))
     lengthhigh = len(read_input_file("/input/high.csv"))
     notmanualnottool = (lengthlow * lengthhigh) - manualtool - notmanualtool - manualnottool
