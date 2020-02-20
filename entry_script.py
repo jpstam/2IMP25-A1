@@ -4,12 +4,15 @@ import os
 import math
 import nltk
 import numpy
-import pprint
 import statistics as stat
 from scipy import spatial
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer as Stemmer
+
+# PrettyPrint and pandas for debug printing reasons.
+import pprint
+import pandas as pd
 
 
 def nltk_prereq():
@@ -132,6 +135,8 @@ def tracelink(matrix, var):
             x for x, y in v.items() if y >= 0.67 * max(v.values())
         ] for k, v in matrix.items()}
     if var == 3:
+        # for k, v in matrix.items():
+        #     print(f'{k}: mean: {stat.mean(v.values())}, max: {max(v.values())}, stdev: {stat.stdev(v.values())}')
         return {k: [
             x for x, y in v.items() if y >= 1.1 * stat.mean(v.values()) + 0.2 * max(v.values()) + 1.9 * stat.stdev(v.values())
         ] for k, v in matrix.items()}
@@ -141,7 +146,6 @@ def evaluate(res, valid):
     manualtool = 0
     notmanualtool = 0
     manualnottool = 0
-    notmanualnottool = 0
     for k, v in res.items():
         for x in v:
             if x in [ks.strip() for ks in valid[k].split(",")]:
@@ -201,16 +205,24 @@ if __name__ == "__main__":
 
     pp = pprint.PrettyPrinter(width=41, compact=True)
 
+    ev = True
+    validation = {}
+
     lowreqs = read_input_file("/input/low.csv")
     highreqs = read_input_file("/input/high.csv")
-    validation = read_input_file("/input/links.csv")
+    try:
+        validation = read_input_file("/input/links.csv")
+    except IOError:
+        ev = False
+        print("/input/links.csv not found, running without evaluation")
     prohigh = preproc(highreqs)
     prolow = preproc(lowreqs)
     masterVocab = create_master_vocab(prohigh, prolow)
     highvec = create_vector_rep(masterVocab, prohigh)
     lowvec = create_vector_rep(masterVocab, prolow)
     simmatrix = create_simmatrix(highvec, lowvec)
+    # print(pd.DataFrame(simmatrix).to_string())
     result = tracelink(simmatrix, match_type)
-    # pp.pprint(result)
     write_output_file(result)
-    evaluate(result, validation)
+    if ev:
+        evaluate(result, validation)
