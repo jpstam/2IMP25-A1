@@ -16,6 +16,9 @@ import pandas as pd
 
 
 def nltk_prereq():
+    '''
+    Download the things we use for nltk
+    '''
     nltk.download('stopwords')
     nltk.download('punkt')
 
@@ -51,6 +54,7 @@ def read_input_file(ifile):
         reqs = {}
         line_count = 0
         for row in csv_reader:
+            # Skip line with column names.
             if line_count > 0:
                 reqs[row[0]] = row[1]
             line_count += 1
@@ -58,15 +62,30 @@ def read_input_file(ifile):
 
 
 def tokenize(reqs):
+    '''
+    Tokenize a dict of strings
+    :param reqs: The dict with strings.
+    :return: The dict with a list of words.
+    '''
     return {k: word_tokenize(v) for k, v in reqs.items()}
 
 
 def remove_stop_words(inreqs):
+    '''
+    Remove storwords from nltk.
+    :param inreqs: input
+    :return:same as input, but without stopwords
+    '''
     stop_words = set(stopwords.words('english'))
     return {k: [w for w in v if not w in stop_words] for k, v in inreqs.items()}
 
 
 def stem_words(reqs):
+    '''
+    Bring words to stemmed form using nltk
+    :param reqs: input
+    :return: stemmed input
+    '''
     porter = Stemmer()
     return {k: [
         porter.stem(x) for x in v
@@ -74,6 +93,11 @@ def stem_words(reqs):
 
 
 def preproc(reqs):
+    '''
+    Preprocessing steps
+    :param reqs:
+    :return:
+    '''
     reqtok = tokenize(reqs)
     reqrsw = remove_stop_words(reqtok)
     reqstem = stem_words(reqrsw)
@@ -135,8 +159,10 @@ def tracelink(matrix, var):
             x for x, y in v.items() if y >= 0.67 * max(v.values())
         ] for k, v in matrix.items()}
     if var == 3:
+        # DEBUG: print some metrics, commented out
         # for k, v in matrix.items():
         #     print(f'{k}: mean: {stat.mean(v.values())}, max: {max(v.values())}, stdev: {stat.stdev(v.values())}')
+        # END DEBUG
         return {k: [
             x for x, y in v.items() if y >= 1.1 * stat.mean(v.values()) + 0.2 * max(v.values()) + 1.9 * stat.stdev(v.values())
         ] for k, v in matrix.items()}
@@ -146,6 +172,7 @@ def evaluate(res, valid):
     manualtool = 0
     notmanualtool = 0
     manualnottool = 0
+    # Check what is classified right and what not.
     for k, v in res.items():
         for x in v:
             if x in [ks.strip() for ks in valid[k].split(",")]:
@@ -153,20 +180,24 @@ def evaluate(res, valid):
             else:
                 notmanualtool += 1
                 print(f'Misclassification: {x} linked with {k}')
+    # Check what is missed, while it should be selected
     for k, v in valid.items():
         for x in v.split(","):
             # if x.strip for empty sets in valid
             if x.strip() and x.strip() not in res[k]:
                 manualnottool += 1
                 print(f'Link not found: {x.strip()} not linked with {k}')
+    # Calculate what is missed correctly, by the size of the requirement sets.
     lengthlow = len(read_input_file("/input/low.csv"))
     lengthhigh = len(read_input_file("/input/high.csv"))
     notmanualnottool = (lengthlow * lengthhigh) - manualtool - notmanualtool - manualnottool
 
+    # Calculate metrics
     recall = manualtool / (manualtool + manualnottool)
     precision = manualtool / (manualtool + notmanualtool)
     fmeasure = 2 * precision * recall / (precision + recall)
 
+    # Print results
     print(f'number correctly identified by tool {manualtool}')
     print(f'number missed by tool, but identified manually {manualnottool}')
     print(f'number incorrectly identified by tool {notmanualtool}')
@@ -201,7 +232,7 @@ if __name__ == "__main__":
     with open("/input/low.csv", 'r') as inputfile:
         print(f"There are {len(inputfile.readlines()) - 1} low-level requirements")
 
-    nltk_prereq()
+    nltk_prereq()  # download nltk prerequisites
 
     pp = pprint.PrettyPrinter(width=41, compact=True)
 
@@ -212,7 +243,7 @@ if __name__ == "__main__":
     highreqs = read_input_file("/input/high.csv")
     try:
         validation = read_input_file("/input/links.csv")
-    except IOError:
+    except IOError:  # In case of IOError, skip evaluation
         ev = False
         print("/input/links.csv not found, running without evaluation")
     prohigh = preproc(highreqs)
